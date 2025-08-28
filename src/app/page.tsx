@@ -174,14 +174,12 @@ export default function SevenYearComparison() {
     }
     setPickerOpenFor(null);
   };
-
   const handleCalculate = () => {
     if (cars.length === 0 || cars.some((c) => !c.modelId)) {
       setResult({
         carPriceTotal: 0,
         optionTotal: 0,
         miscTotal: 0,
-        taxTotal: 0,
         totalPurchase: 0,
         tfvTotal: 0,
         resaleCount: 0,
@@ -193,38 +191,24 @@ export default function SevenYearComparison() {
       return;
     }
 
-    const len = cars.length;
+    // 台数に応じたリース月数
     let monthsAlloc: number[] = [];
-    if (len === 1) monthsAlloc = [84];
-    else if (len === 2) monthsAlloc = [38, 46];
-    else if (len === 3) monthsAlloc = [38, 38, 8];
-    else {
-      setResult({
-        carPriceTotal: 0,
-        optionTotal: 0,
-        miscTotal: 0,
-        taxTotal: 0,
-        totalPurchase: 0,
-        tfvTotal: 0,
-        resaleCount: 0,
-        resaleTotal: 0,
-        savings: 0,
-        monthsAlloc: [],
-        error: "1〜3台の間で選択してください",
-      });
-      return;
-    }
+    if (cars.length === 1) monthsAlloc = [84];
+    else if (cars.length === 2) monthsAlloc = [84, 84];
+    else if (cars.length === 3) monthsAlloc = [84, 84, 8];
 
+    // 車両代合計
     const carPriceTotal = cars.reduce(
       (sum, c) => sum + (modelMap.get(c.modelId!)?.price ?? 0),
       0
     );
 
+    // オプション・諸費用
     const optionTotal = optionPrice * cars.length;
     const miscTotal = miscFee * cars.length;
-    const taxTotal = Math.floor((carPriceTotal + optionTotal + miscTotal) * 0.1);
-    const totalPurchase = carPriceTotal + optionTotal + miscTotal + taxTotal;
+    const totalPurchase = carPriceTotal + optionTotal + miscTotal;
 
+    // リース料合計（monthsAllocに基づく）
     const tfvTotal = cars.reduce((sum, c, idx) => {
       const m = modelMap.get(c.modelId!);
       const monthly = m?.monthly ?? 0;
@@ -232,15 +216,17 @@ export default function SevenYearComparison() {
       return sum + monthly * months;
     }, 0);
 
+    // 売却額（2台目以降）
     const resaleCount = Math.max(cars.length - 1, 0);
     const resaleTotal = 1450000 * resaleCount;
+
+    // 節約額
     const savings = totalPurchase - (tfvTotal + resaleTotal);
 
     setResult({
       carPriceTotal,
       optionTotal,
       miscTotal,
-      taxTotal,
       totalPurchase,
       tfvTotal,
       resaleCount,
@@ -249,6 +235,7 @@ export default function SevenYearComparison() {
       monthsAlloc,
     });
   };
+
 
   return (
     <div className="bg-[#f4f3f0] min-h-screen w-full">
@@ -403,102 +390,67 @@ export default function SevenYearComparison() {
         </button>
 
         {/* 結果表示 */}
-        {result && (
-          <div className="mt-8 space-y-4">
-            {result.error && (
-              <div className="p-3 bg-red-50 text-red-700 rounded text-sm">
-                {result.error}
+        {result && !result.error && (
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 普通に購入 */}
+            <div className="bg-white rounded-xl shadow-md p-8 flex flex-col">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+                普通に購入
+              </h2>
+              <p className="text-4xl font-extrabold text-gray-800 text-center mb-8">
+                ¥{result.totalPurchase.toLocaleString()}
+              </p>
+              <div className="flex justify-between text-sm text-gray-700 mb-2">
+                <span>車両代合計</span>
+                <span>¥{result.carPriceTotal.toLocaleString()}</span>
               </div>
-            )}
+              <div className="flex justify-between text-sm text-gray-700 mb-2">
+                <span>オプション合計</span>
+                <span>¥{result.optionTotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700 mb-2">
+                <span>諸費用合計</span>
+                <span>¥{result.miscTotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>売却額（{result.resaleCount}台）</span>
+                <span>¥{result.resaleTotal.toLocaleString()}</span>
+              </div>
+            </div>
 
-            {!result.error && (
-              <>
-                <div className="text-sm text-gray-700">
-                  契約月数の内訳:{" "}
-                  {result.monthsAlloc.map((m, i) => `${i + 1}台目 ${m}か月`).join(" ・ ")}
-                </div>
+            {/* リース利用 */}
+            <div className="bg-[#fffaf5] border-2 border-[#fc844f] rounded-xl shadow-lg p-8 flex flex-col relative">
+              {/* お得ラベル */}
+              <div
+                className="absolute -top-6 left-1/2 -translate-x-1/2
+    bg-[#fc844f] text-white text-xl px-4 py-2
+    rounded-full font-bold shadow-lg inline-block whitespace-nowrap"
+              >
+                {result.savings.toLocaleString()} 円お得！
+              </div>
 
-                <div className="flex flex-col md:flex-row gap-6">
-                  {/* 購入パターン */}
-                  <div className="flex-1 bg-white rounded-lg shadow p-4">
-                    <h2 className="text-xl font-bold mb-2">普通に購入した場合</h2>
-                    <table className="table-auto border-collapse w-full">
-                      <tbody>
-                        <tr>
-                          <td className="p-2">車両代合計</td>
-                          <td className="p-2 text-right">
-                            ¥{result.carPriceTotal.toLocaleString()}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="p-2">オプション合計</td>
-                          <td className="p-2 text-right">
-                            ¥{result.optionTotal.toLocaleString()}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="p-2">諸費用合計</td>
-                          <td className="p-2 text-right">
-                            ¥{result.miscTotal.toLocaleString()}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="p-2">消費税（10%）</td>
-                          <td className="p-2 text-right">
-                            ¥{result.taxTotal.toLocaleString()}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 font-bold text-red-600">
-                            総購入額（{cars.length}台分）
-                          </td>
-                          <td className="p-2 text-right font-bold text-red-600">
-                            ¥{result.totalPurchase.toLocaleString()}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
 
-                  {/* リースパターン */}
-                  <div className="flex-1 bg-white rounded-lg shadow p-4">
-                    <h2 className="text-xl font-bold mb-2">リースを利用した場合</h2>
-                    <table className="table-auto border-collapse w-full">
-                      <tbody>
-                        <tr>
-                          <td className="p-2">リース料合計（TFV）</td>
-                          <td className="p-2 text-right font-semibold">
-                            ¥{result.tfvTotal.toLocaleString()}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="p-2">売却額（{result.resaleCount}台）</td>
-                          <td className="p-2 text-right">
-                            ¥{result.resaleTotal.toLocaleString()}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 font-bold text-green-700">
-                            7年間の出費合計（リース利用）
-                          </td>
-                          <td className="p-2 text-right font-bold text-green-700">
-                            ¥{(result.tfvTotal + result.resaleTotal).toLocaleString()}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+                リース利用
+              </h2>
+              {/* 総額 */}
+              <p className="text-5xl font-extrabold text-[#fc844f] text-center mb-8">
+                ¥{(result.tfvTotal + result.resaleTotal).toLocaleString()}
+              </p>
 
-                {/* 節約額 */}
-                <div className="bg-red-600 text-white text-center text-2xl font-bold p-6 rounded">
-                  7年間の出費節約額！ <br />
-                  ¥{result.savings.toLocaleString()}
-                </div>
-              </>
-            )}
+              {/* 内訳 */}
+              <div className="flex justify-between text-sm text-gray-700 mb-2">
+                <span>リース料合計（TFV）</span>
+                <span>¥{result.tfvTotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>売却額（{result.resaleCount}台）</span>
+                <span>¥{result.resaleTotal.toLocaleString()}</span>
+              </div>
+            </div>
           </div>
         )}
+
 
         {/* モーダル */}
         {pickerOpenFor !== null && (
