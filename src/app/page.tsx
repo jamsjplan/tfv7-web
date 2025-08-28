@@ -9,113 +9,110 @@ export type RecommendedCar = {
   maker: string;
   name: string;
   grade?: string;
-  people?: string;
+  people?: number;
   monthly?: number; // 税込・円（数値）
   detailUrl: string;
   imageUrl?: string;
-  price: number; // 車両代（比較用・ここではダミー値でもOK）
+  price: number; // 車両代（比較用・月額×84で計算）
 };
 
-const RECOMMENDED: RecommendedCar[] = [
+// 元データ（priceは入れない）
+const RAW_RECOMMENDED: Omit<RecommendedCar, "price">[] = [
   {
     id: "wgnr",
     maker: "スズキ",
     name: "ワゴンR",
     grade: "HYBRID FX-S",
-    people: "4人",
+    people: 4,
     monthly: 26950,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=81350",
     imageUrl: "/cars/suzuki/ワゴンR.jpg",
-    price: 1500000,
   },
   {
     id: "tanto",
     maker: "ダイハツ",
     name: "タント",
     grade: "X",
-    people: "4人",
+    people: 4,
     monthly: 29480,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=82950",
     imageUrl: "/cars/daihatsu/タント.jpg",
-    price: 1500000,
   },
   {
     id: "wgnrsmile",
     maker: "スズキ",
     name: "ワゴンRスマイル",
     grade: "HYBRID S",
-    people: "4人",
+    people: 4,
     monthly: 31020,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=82264",
     imageUrl: "/cars/suzuki/ワゴンRスマイル.jpg",
-    price: 1500000,
   },
   {
     id: "nbox",
     maker: "ホンダ",
     name: "N BOX",
-    people: "4人",
+    people: 4,
     monthly: 31900,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=81437",
     imageUrl: "/cars/honda/N BOX.jpg",
-    price: 1500000,
   },
   {
     id: "spacia-custom",
     maker: "スズキ",
     name: "スペーシアカスタム",
     grade: "HYBRID GS",
-    people: "4人",
+    people: 4,
     monthly: 32450,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=82010",
     imageUrl: "/cars/suzuki/スペーシアカスタム.jpg",
-    price: 1500000,
   },
   {
     id: "every-wagon",
     maker: "スズキ",
     name: "エブリイワゴン 標準ルーフ",
     grade: "PZターボ",
-    people: "4人",
+    people: 4,
     monthly: 33550,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=81234",
     imageUrl: "/cars/suzuki/エブリイワゴン.jpg",
-    price: 1500000,
   },
   {
     id: "swift-mx-2",
     maker: "スズキ",
     name: "スイフト",
     grade: "HYBRID MX",
-    people: "5人",
+    people: 5,
     monthly: 37620,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=83002",
     imageUrl: "/cars/suzuki/スイフト.jpg",
-    price: 1500000,
   },
   {
     id: "freed-air-ex",
     maker: "ホンダ",
     name: "フリード",
     grade: "AIR EX 6人乗り",
-    people: "6人",
+    people: 6,
     monthly: 52690,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=82555",
     imageUrl: "/cars/honda/フリード.jpg",
-    price: 1500000,
   },
   {
     id: "prius-g",
     maker: "トヨタ",
     name: "プリウス",
     grade: "G (ハイブリッド)",
-    people: "5人",
+    people: 5,
     monthly: 57750,
     detailUrl: "https://www.jams-cars.jp/car_details/?g=5&id=82888",
     imageUrl: "/cars/toyota/プリウス.jpg",
-    price: 1500000,
   },
 ];
+
+const RECOMMENDED: RecommendedCar[] = RAW_RECOMMENDED.map((c) => ({
+  ...c,
+  price: (c.monthly ?? 0) * 84, // ← ここで自動計算
+}));
 
 // -----------------------------
 // 型 & ヘルパー
@@ -256,14 +253,14 @@ export default function SevenYearComparison() {
   return (
     <div className="bg-[#f4f3f0] min-h-screen w-full">
       {/* 中央寄せコンテンツ */}
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-6 max-w-4xl mx-auto">
         <div className="p-4 rounded">
           <h1 className="text-2xl font-bold text-gray-800">
             Jセブン料金計算シミュレーション
           </h1>
           <div className="border-b-2 border-[#fc844f] mt-1 mb-2"></div>
           <p className="text-sm text-gray-600">
-            条件を選ぶだけで、Jセブンの料金を簡単にシミュレーションできます。
+            希望車種を選ぶだけで、Jセブンの料金を簡単にシミュレーションできます。
           </p>
         </div>
 
@@ -275,15 +272,38 @@ export default function SevenYearComparison() {
 
             return (
               <div key={car.id} className="rounded-2xl bg-white shadow p-6">
-                <div className="flex gap-6 items-start">
-                  {/* 画像＋タイトル */}
-                  <div className="shrink-0 relative">
-                    {/* 左上タイトル */}
-                    <div className="absolute top-0 left-0 bg-white/80 px-2 py-1 rounded-br-lg text-sm font-bold text-gray-900">
-                      {selected ? `${selected.maker}｜${selected.name}` : "（車種未選択）"}
-                    </div>
+                {/* 上部：メーカー｜車種名 */}
+                <div className="flex justify-between items-start mb-4">
+                  <div className="text-2xl font-bold text-gray-900">
+                    {selected ? `${selected.maker}｜${selected.name}` : "（車種未選択）"}
+                  </div>
+                  {/* ゴミ箱 */}
+                  <button
+                    onClick={() => handleRemoveCar(car.id)}
+                    aria-label={`車両${index + 1}を削除`}
+                    className="p-2 text-gray-500 hover:text-[#fc844f] cursor-pointer"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="w-7 h-7"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 7h12M9 7V4h6v3m-9 4h12l-1 9H8l-1-9z"
+                      />
+                    </svg>
+                  </button>
+                </div>
 
-                    {/* 画像 */}
+                {/* 画像と月額 */}
+                <div className="flex gap-6 items-center">
+                  {/* 左：画像 */}
+                  <div className="shrink-0">
                     {selected?.imageUrl ? (
                       <img
                         src={selected.imageUrl}
@@ -297,81 +317,54 @@ export default function SevenYearComparison() {
                     )}
                   </div>
 
-                  {/* 右側情報 */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1">
-                        {/* gradeや乗車人数 */}
-                        <div className="text-sm text-gray-600 mt-1">
-                          {selected ? `${selected.grade ?? ""} ${selected.people ?? ""}` : ""}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* ゴミ箱ボタン */}
-                        <button
-                          onClick={() => handleRemoveCar(car.id)}
-                          aria-label={`車両${index + 1}を削除`}
-                          className="p-2 text-gray-500 hover:text-red-600"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="w-7 h-7"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M6 7h12M9 7V4h6v3m-9 4h12l-1 9H8l-1-9z"
-                            />
-                          </svg>
-                        </button>
+                  {/* 右：価格 */}
+                  <div className="flex-1">
+                    <div className="text-sm text-[#fc844f] font-semibold">月額（税込）</div>
+                    <div className="flex items-end gap-2">
+                      <div className="text-4xl font-extrabold text-[#fc844f] leading-none">
+                        ¥{selected?.monthly ? selected.monthly.toLocaleString() : "―"}
                       </div>
                     </div>
-
-                    {/* 月額 */}
-                    <div className="mt-4">
-                      <div className="text-sm text-[#fc844f] font-semibold">月額（税込）</div>
-                      <div className="flex items-end gap-2">
-                        <div className="text-4xl font-extrabold text-[#fc844f] leading-none">
-                          {selected?.monthly ? selected.monthly.toLocaleString() : "―"}
-                        </div>
-                        <div className="text-base text-gray-700">円</div>
-                      </div>
-                    </div>
-
-                    {/* タグ */}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {selected?.grade && (
-                        <span className="inline-block rounded-md bg-gray-100 text-gray-700 text-xs px-2 py-1">
-                          グレード {selected.grade}
-                        </span>
-                      )}
-                      {selected?.people && (
-                        <span className="inline-block rounded-md bg-gray-100 text-gray-700 text-xs px-2 py-1">
-                          乗車 {selected.people}
-                        </span>
-                      )}
-                    </div>
+                    {/* 追加情報パックなどをここに表示する場合 */}
+                    {/*<div className="text-sm text-gray-600 mt-1">メンテナンスパック込み</div>*/}
                   </div>
                 </div>
 
-                {/* 下部 */}
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 pt-4 gap-4 border-t">
-                  <div>
-                    <div className="text-xs text-gray-500">継承希望月</div>
-                    <div className="text-lg text-gray-800 mt-1">—</div>
+                {/* タグ群（年式・駆動方式・住所・ミッション・走行距離など） */}
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                  <div className="flex items-center">
+                    <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded mr-2">グレード</span>
+                    <span className="text-gray-800 text-sm">{selected?.grade ? selected.grade : "―"}</span>
                   </div>
-                  <div>
+                  <div className="flex items-center">
+                    <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded mr-2">乗車人数</span>
+                    <span className="text-gray-800 text-sm">{selected?.people ? selected.people : "―"}人</span>
+                  </div>
+                </div>
+
+                {/* 下部：リース期間など */}
+                <div className="mt-6 flex pt-4 border-t">
+                  {/* 継承するリース期間 */}
+                  <div className="flex-1 pr-4">
                     <div className="text-xs text-gray-500">継承するリース期間</div>
                     <div className="text-lg text-gray-800 mt-1">
                       {leaseMonths > 0 ? `${leaseMonths}ヶ月` : "—"}
                     </div>
                   </div>
-                </div>
 
+                  {/* 区切り線 */}
+                  <div className="w-px bg-gray-300 mx-4" />
+
+                  {/* 本体価格 */}
+                  <div className="flex-1 pl-4">
+                    <div className="text-xs text-gray-500">本体価格</div>
+                    <div className="text-lg text-gray-800 mt-1">
+                      {selected?.price && selected.price > 0
+                        ? `¥${selected.price.toLocaleString()}`
+                        : "—"}
+                    </div>
+                  </div>
+                </div>
                 <div
                   onClick={() => setPickerOpenFor(car.id)}
                   className="mt-3 text-sm text-indigo-600 hover:underline cursor-pointer text-right"
@@ -379,7 +372,6 @@ export default function SevenYearComparison() {
                   &lt; 車種を選び直す
                 </div>
               </div>
-
             );
           })}
 
@@ -388,14 +380,15 @@ export default function SevenYearComparison() {
             <button
               onClick={() => setPickerOpenFor("new")}
               className="flex flex-col items-center justify-center 
-                        rounded-xl h-20 w-full text-[#fc844f] cursor-pointer
-                        bg-white shadow"
+    rounded-xl h-20 w-full text-[#fc844f] cursor-pointer
+    bg-white shadow border-2 border-transparent hover:border-[#fc844f] transition"
             >
               <span className="text-3xl font-bold leading-none">＋</span>
               <span className="mt-1 text-xs">車両を追加</span>
             </button>
           )}
         </div>
+
 
         {/* 計算ボタン */}
         <button
