@@ -144,7 +144,7 @@ export default function SevenYearComparison() {
     carPriceTotal: number;
     optionTotal: number;
     miscTotal: number;
-    taxTotal: number;
+    taxTotal?: number;
     totalPurchase: number;
     tfvTotal: number;
     resaleCount: number;
