@@ -222,9 +222,10 @@ export default function SevenYearComparison() {
     <div className="bg-[#f4f3f0] min-h-screen w-full">
       <div className="p-6 max-w-4xl mx-auto">
         <div className="p-4 rounded">
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 whitespace-nowrap">
             Jセブン料金計算シミュレーション
           </h1>
+
           <div className="border-b-2 border-[#fc844f] mt-1 mb-2"></div>
           <p className="text-sm text-gray-600">
             希望車種を選ぶだけで、Jセブンの料金を簡単にシミュレーションできます。
@@ -295,7 +296,7 @@ export default function SevenYearComparison() {
                   </div>
                 </div>
 
-                <div className="mt-6 flex pt-4 border-t">
+                <div className="mt-4 flex pt-4 border-t">
                   <div className="flex-1 pr-4">
                     <div className="text-[10px] sm:text-xs md:text-sm text-gray-500">
                       継承するリース期間
