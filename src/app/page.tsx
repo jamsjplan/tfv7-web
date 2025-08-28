@@ -399,7 +399,7 @@ setResult({
             {/* 普通に購入 */}
             <div className="bg-white rounded-xl shadow-md p-8 flex flex-col">
               <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-                普通に購入
+                普通に購入した場合
               </h2>
               <p className="text-4xl font-extrabold text-gray-800 text-center mb-8">
                 ¥{result.totalPurchase.toLocaleString()}
@@ -434,7 +434,7 @@ setResult({
               </div>
 
               <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-                リース利用
+                Jセブンプラン利用の場合
               </h2>
 
               {/* 総額 */}
