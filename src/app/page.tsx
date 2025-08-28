@@ -136,15 +136,18 @@ export default function SevenYearComparison() {
 
   const [result, setResult] = useState<{
     carPriceTotal: number;
+    taxTotal: number;
     optionTotal: number;
     miscTotal: number;
     totalPurchase: number;
     tfvTotal: number;
+    leaseBreakdown: { label: string; total: number }[];
     resaleCount: number;
     resaleTotal: number;
     savings: number;
     error?: string;
   } | null>(null);
+
 
   const modelMap = useMemo(() => {
     const map = new Map<string, RecommendedCar>();
@@ -171,10 +174,12 @@ export default function SevenYearComparison() {
     if (cars.length === 0 || cars.some((c) => !c.modelId)) {
       setResult({
         carPriceTotal: 0,
+        taxTotal: 0,
         optionTotal: 0,
         miscTotal: 0,
         totalPurchase: 0,
         tfvTotal: 0,
+        leaseBreakdown: [],
         resaleCount: 0,
         resaleTotal: 0,
         savings: 0,
@@ -183,10 +188,13 @@ export default function SevenYearComparison() {
       return;
     }
 
+    const taxRate = 0.1;
+
     const carPriceTotal = cars.reduce(
       (sum, c) => sum + (modelMap.get(c.modelId!)?.fullprice ?? 0),
       0
     );
+    const taxTotal = Math.floor(carPriceTotal * taxRate);
 
     const optionTotal = optionPrice * cars.length;
     const miscTotal = miscFee * cars.length;
@@ -194,29 +202,38 @@ export default function SevenYearComparison() {
     const resaleCount = Math.max(cars.length - 1, 0);
     const resaleTotal = 1450000 * resaleCount;
 
-    const totalBeforeResale = carPriceTotal + optionTotal + miscTotal;
+    const totalBeforeResale = carPriceTotal + taxTotal + optionTotal + miscTotal;
     const totalPurchase = totalBeforeResale - resaleTotal;
 
-    const tfvTotal = cars.reduce((sum, c, idx) => {
+    // 各台のリース料を個別に計算
+    const leaseBreakdown = cars.map((c, idx) => {
       const m = modelMap.get(c.modelId!);
       const monthly = m?.monthly ?? 0;
       const months = getLeaseMonths(cars.length, idx);
-      return sum + monthly * months;
-    }, 0);
+      return {
+        label: `${idx + 1}台目`,
+        total: monthly * months,
+      };
+    });
+
+    const tfvTotal = leaseBreakdown.reduce((sum, l) => sum + l.total, 0);
 
     const savings = totalPurchase - tfvTotal;
 
     setResult({
       carPriceTotal,
+      taxTotal,
       optionTotal,
       miscTotal,
       totalPurchase,
       tfvTotal,
+      leaseBreakdown,
       resaleCount,
       resaleTotal,
       savings,
     });
   };
+
 
   return (
     <div className="bg-[#f4f3f0] min-h-screen w-full">
@@ -363,55 +380,84 @@ export default function SevenYearComparison() {
           計算
         </button>
 
-        {result && !result.error && (
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-md p-8 flex flex-col">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-                普通に購入した場合
-              </h2>
-              <p className="text-4xl font-extrabold text-gray-800 text-center mb-8">
-                ¥{result.totalPurchase.toLocaleString()}
-              </p>
-              <div className="flex justify-between text-sm text-gray-700 mb-2">
-                <span>車両代合計</span>
-                <span>¥{result.carPriceTotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-700 mb-2">
-                <span>オプション合計</span>
-                <span>¥{result.optionTotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-700 mb-2">
-                <span>諸費用合計</span>
-                <span>¥{result.miscTotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-700">
-                <span>売却額（{result.resaleCount}台）</span>
-                <span>- ¥{result.resaleTotal.toLocaleString()}</span>
-              </div>
-            </div>
+        {result && !result.error && (() => {
+          const isLeaseCheaper = result.tfvTotal < result.totalPurchase;
+          const diff = Math.abs(result.totalPurchase - result.tfvTotal);
 
-            <div className="bg-[#fffaf5] border-2 border-[#fc844f] rounded-xl shadow-lg p-8 flex flex-col relative">
+          return (
+            <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-6">
+
+              {/* 普通に購入 */}
               <div
-                className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#fc844f] text-white text-xl px-4 py-2 rounded-full font-bold shadow-lg inline-block whitespace-nowrap"
+                className={`rounded-xl shadow-md p-8 flex flex-col relative ${!isLeaseCheaper ? "bg-[#fffaf5] border-2 border-[#fc844f]" : "bg-white"
+                  }`}
               >
-                {result.savings.toLocaleString()} 円お得！
+                {!isLeaseCheaper && (
+                  <div
+                    className="absolute -top-6 left-1/2 -translate-x-1/2
+              bg-[#fc844f] text-white text-xl px-4 py-2 rounded-full font-bold shadow-lg whitespace-nowrap"
+                  >
+                    {diff.toLocaleString()} 円お得！
+                  </div>
+                )}
+
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+                  普通に購入した場合
+                </h2>
+                <p
+                  className={`font-extrabold text-center mb-8 ${!isLeaseCheaper ? "text-5xl text-[#fc844f]" : "text-4xl text-gray-800"
+                    }`}
+                >
+                  ¥{result.totalPurchase.toLocaleString()}
+                </p>
+                <div className="flex justify-between text-sm text-gray-700 mb-2">
+                  <span>車両代合計（税抜）</span>
+                  <span>¥{result.carPriceTotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-700 mb-2">
+                  <span>消費税（10%）</span>
+                  <span>¥{result.taxTotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-700 mb-2">
+                  <span>オプション合計</span>
+                  <span>¥{result.optionTotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-700 mb-2">
+                  <span>諸費用合計</span>
+                  <span>¥{result.miscTotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-700">
+                  <span>売却額（{result.resaleCount}台）</span>
+                  <span>- ¥{result.resaleTotal.toLocaleString()}</span>
+                </div>
               </div>
 
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-                Jセブンプラン利用の場合
-              </h2>
-
-              <p className="text-5xl font-extrabold text-[#fc844f] text-center mb-8">
-                ¥{result.tfvTotal.toLocaleString()}
-              </p>
-
-              <div className="flex justify-between text-sm text-gray-700 mb-2">
-                <span>リース料合計（TFV）</span>
-                <span>¥{result.tfvTotal.toLocaleString()}</span>
+              {/* Jセブンプラン */}
+              <div className={`rounded-xl shadow-lg p-8 flex flex-col relative ${isLeaseCheaper ? "bg-[#fffaf5] border-2 border-[#fc844f]" : "bg-white"}`}>
+                {isLeaseCheaper && (
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#fc844f] text-white text-xl px-4 py-2 rounded-full font-bold shadow-lg whitespace-nowrap">
+                    {diff.toLocaleString()} 円お得！
+                  </div>
+                )}
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Jセブンプラン利用の場合</h2>
+                <p className={`font-extrabold text-center mb-8 ${isLeaseCheaper ? "text-5xl text-[#fc844f]" : "text-4xl text-gray-800"}`}>
+                  ¥{result.tfvTotal.toLocaleString()}
+                </p>
+                {result.leaseBreakdown.map((item, idx) => (
+                  <div key={idx} className="flex justify-between text-sm text-gray-700 mb-1">
+                    <span>{item.label}のリース料</span>
+                    <span>¥{item.total.toLocaleString()}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-sm text-gray-700 mt-2">
+                  <span>リース料合計</span>
+                  <span>¥{result.tfvTotal.toLocaleString()}</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
+
 
         {pickerOpenFor !== null && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
