@@ -449,10 +449,6 @@ export default function SevenYearComparison() {
                     <span>¥{item.total.toLocaleString()}</span>
                   </div>
                 ))}
-                <div className="flex justify-between text-sm text-gray-700 mt-2">
-                  <span>リース料合計</span>
-                  <span>¥{result.tfvTotal.toLocaleString()}</span>
-                </div>
               </div>
             </div>
           );
