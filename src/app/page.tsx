@@ -111,7 +111,7 @@ const RAW_RECOMMENDED: Omit<RecommendedCar, "price">[] = [
 
 const RECOMMENDED: RecommendedCar[] = RAW_RECOMMENDED.map((c) => ({
   ...c,
-  price: (c.monthly ?? 0) * 84, // ← ここで自動計算
+  price: 1500000, // ← ここで自動計算
 }));
 
 // -----------------------------
