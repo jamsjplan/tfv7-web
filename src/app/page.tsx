@@ -198,42 +198,46 @@ export default function SevenYearComparison() {
     else if (cars.length === 3) monthsAlloc = [84, 84, 8];
 
     // 車両代合計
-    const carPriceTotal = cars.reduce(
-      (sum, c) => sum + (modelMap.get(c.modelId!)?.price ?? 0),
-      0
-    );
+const carPriceTotal = cars.reduce(
+  (sum, c) => sum + (modelMap.get(c.modelId!)?.price ?? 0),
+  0
+);
 
-    // オプション・諸費用
-    const optionTotal = optionPrice * cars.length;
-    const miscTotal = miscFee * cars.length;
-    const totalPurchase = carPriceTotal + optionTotal + miscTotal;
+// オプション・諸費用
+const optionTotal = optionPrice * cars.length;
+const miscTotal = miscFee * cars.length;
 
-    // リース料合計（monthsAllocに基づく）
-    const tfvTotal = cars.reduce((sum, c, idx) => {
-      const m = modelMap.get(c.modelId!);
-      const monthly = m?.monthly ?? 0;
-      const months = monthsAlloc[idx] ?? 0;
-      return sum + monthly * months;
-    }, 0);
+// 売却額（2台目以降）
+const resaleCount = Math.max(cars.length - 1, 0);
+const resaleTotal = 1450000 * resaleCount;
 
-    // 売却額（2台目以降）
-    const resaleCount = Math.max(cars.length - 1, 0);
-    const resaleTotal = 1450000 * resaleCount;
+// 「普通に購入」の合計（売却額を引いた値）
+const totalBeforeResale = carPriceTotal + optionTotal + miscTotal;
+const totalPurchase = totalBeforeResale - resaleTotal;
 
-    // 節約額
-    const savings = totalPurchase - (tfvTotal + resaleTotal);
+// リース料合計
+const tfvTotal = cars.reduce((sum, c, idx) => {
+  const m = modelMap.get(c.modelId!);
+  const monthly = m?.monthly ?? 0;
+  const months = monthsAlloc[idx] ?? 0;
+  return sum + monthly * months;
+}, 0);
 
-    setResult({
-      carPriceTotal,
-      optionTotal,
-      miscTotal,
-      totalPurchase,
-      tfvTotal,
-      resaleCount,
-      resaleTotal,
-      savings,
-      monthsAlloc,
-    });
+// 節約額
+const savings = totalPurchase - tfvTotal;
+
+setResult({
+  carPriceTotal,
+  optionTotal,
+  miscTotal,
+  totalPurchase,
+  tfvTotal,
+  resaleCount,
+  resaleTotal,
+  savings,
+  monthsAlloc,
+});
+
   };
 
 
@@ -414,7 +418,7 @@ export default function SevenYearComparison() {
               </div>
               <div className="flex justify-between text-sm text-gray-700">
                 <span>売却額（{result.resaleCount}台）</span>
-                <span>¥{result.resaleTotal.toLocaleString()}</span>
+                <span>- ¥{result.resaleTotal.toLocaleString()}</span>
               </div>
             </div>
 
@@ -423,29 +427,25 @@ export default function SevenYearComparison() {
               {/* お得ラベル */}
               <div
                 className="absolute -top-6 left-1/2 -translate-x-1/2
-    bg-[#fc844f] text-white text-xl px-4 py-2
-    rounded-full font-bold shadow-lg inline-block whitespace-nowrap"
+      bg-[#fc844f] text-white text-xl px-4 py-2
+      rounded-full font-bold shadow-lg inline-block whitespace-nowrap"
               >
                 {result.savings.toLocaleString()} 円お得！
               </div>
 
-
               <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
                 リース利用
               </h2>
+
               {/* 総額 */}
               <p className="text-5xl font-extrabold text-[#fc844f] text-center mb-8">
-                ¥{(result.tfvTotal + result.resaleTotal).toLocaleString()}
+                ¥{result.tfvTotal.toLocaleString()}
               </p>
 
               {/* 内訳 */}
               <div className="flex justify-between text-sm text-gray-700 mb-2">
                 <span>リース料合計（TFV）</span>
                 <span>¥{result.tfvTotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-700">
-                <span>売却額（{result.resaleCount}台）</span>
-                <span>¥{result.resaleTotal.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -511,6 +511,6 @@ export default function SevenYearComparison() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }
