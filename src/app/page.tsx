@@ -239,17 +239,28 @@ export default function SevenYearComparison() {
 
             return (
               <div key={car.id} className="rounded-2xl bg-white shadow p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="text-2xl font-bold text-gray-900">
+                <div className="flex justify-between items-start mb-4 relative">
+                  <div className="font-bold text-gray-900 text-base sm:text-lg md:text-xl lg:text-2xl leading-tight break-words pr-10">
                     {selected ? `${selected.maker}｜${selected.name}` : "（車種未選択）"}
                   </div>
                   <button
                     onClick={() => handleRemoveCar(car.id)}
                     aria-label={`車両${index + 1}を削除`}
-                    className="p-2 text-gray-500 hover:text-[#fc844f] cursor-pointer"
+                    className="absolute top-0 right-0 p-1 sm:p-2 text-gray-500 hover:text-[#fc844f] cursor-pointer"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-7 h-7">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V4h6v3m-9 4h12l-1 9H8l-1-9z" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 7h12M9 7V4h6v3m-9 4h12l-1 9H8l-1-9z"
+                      />
                     </svg>
                   </button>
                 </div>
