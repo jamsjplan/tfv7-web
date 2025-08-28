@@ -219,9 +219,10 @@ const totalPurchase = totalBeforeResale - resaleTotal;
 const tfvTotal = cars.reduce((sum, c, idx) => {
   const m = modelMap.get(c.modelId!);
   const monthly = m?.monthly ?? 0;
-  const months = monthsAlloc[idx] ?? 0;
+  const months = getLeaseMonths(cars.length, idx); // ← ここを統一！
   return sum + monthly * months;
 }, 0);
+
 
 // 節約額
 const savings = totalPurchase - tfvTotal;
