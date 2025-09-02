@@ -1,5 +1,7 @@
 "use client";
 
+export const runtime = 'edge';
+
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useSimStore } from "@/store/simStore";
