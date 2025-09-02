@@ -58,7 +58,7 @@ export default function Results({ result }: Props) {
         {/* 台数別内訳 */}
         {result.leaseBreakdown.map((item, idx) => (
           <div key={idx} className="flex justify-between text-sm text-gray-700 mb-1">
-            <span>{item.label}のリース料</span>
+            <span>{item.label}</span>
             <span>¥{item.total.toLocaleString()}</span>
           </div>
         ))}

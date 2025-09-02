@@ -1,15 +1,17 @@
 "use client";
 
 import { RecommendedCar } from "@/types/cars";
+import { PlanKey } from "@/types/plan";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   list: RecommendedCar[];
   onSelect: (id: string) => void;
+  plan: PlanKey;
 };
 
-export default function PickerModal({ open, onClose, list, onSelect }: Props) {
+export default function PickerModal({ open, onClose, list, onSelect, plan }: Props) {
   if (!open) return null;
 
   return (
@@ -46,7 +48,7 @@ export default function PickerModal({ open, onClose, list, onSelect }: Props) {
               </div>
               <div className="bg-gray-100 p-2 text-center text-sm">
                 月額:{" "}
-                <span className="text-red-600 font-bold text-lg">¥{c.monthly.toLocaleString()}~</span>
+                <span className="text-red-600 font-bold text-lg">¥{(plan === 'j7' ? c.monthly7 : c.monthly9).toLocaleString()}~</span>
                 <span className="text-xs text-gray-600">（税込）</span>
               </div>
             </div>

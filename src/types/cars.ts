@@ -4,7 +4,8 @@ export interface RecommendedCar {
   name: string;
   grade?: string;
   people?: number;
-  monthly: number;
+  monthly7: number;
+  monthly9: number;
   fullprice: number;
   detailUrl: string;
   imageUrl: string;
@@ -13,6 +14,18 @@ export interface RecommendedCar {
 export interface CarRow {
   id: number;
   modelId: string;
+}
+
+export interface Option {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+}
+
+export interface CarOption {
+  optionId: string;
+  quantity: number;
 }
 
 export interface CalcResult {

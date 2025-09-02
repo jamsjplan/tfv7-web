@@ -2,16 +2,21 @@
 
 import { useMemo } from "react";
 import { CalcResult, CarRow, RecommendedCar } from "@/types/cars";
-import { getLeaseMonths } from "@/utils/lease";
+import { getLeaseMonths, isResaleTarget } from "@/utils/lease";
+import { PlanKey } from "@/types/plan";
 
 type Args = {
   cars: CarRow[];
   modelMap: Map<string, RecommendedCar>;
-  optionPrice: number;
+  carOptionsArray: [number, any[]][];
   miscFee: number;
+  plan: PlanKey;
+  carResalePrices: [number, number][];
+  carAdditionalMonthlyPrices: [number, number][];
+  overrideOptionTotal?: number;
 };
 
-export function useLeaseCalc({ cars, modelMap, optionPrice, miscFee }: Args) {
+export function useLeaseCalc({ cars, modelMap, carOptionsArray, miscFee, plan, carResalePrices, carAdditionalMonthlyPrices, overrideOptionTotal }: Args) {
   const calculate = (): CalcResult => {
     if (cars.length === 0 || cars.some((c) => !c.modelId)) {
       return {
@@ -37,19 +42,39 @@ export function useLeaseCalc({ cars, modelMap, optionPrice, miscFee }: Args) {
     );
     const taxTotal = Math.floor(carPriceTotal * taxRate);
 
-    const optionTotal = optionPrice; // オプション料金は既に各車両の合計なので、車両数で掛けない
+    // オプション合計を計算
+    const optionTotal = overrideOptionTotal !== undefined 
+      ? overrideOptionTotal 
+      : Array.from(new Map(carOptionsArray).values()).reduce((sum: number, carOptions: any[]) => {
+          return sum + carOptions.reduce((carSum, carOption) => {
+            return carSum + (carOption?.price || 0);
+          }, 0);
+        }, 0);
     const miscTotal = miscFee * cars.length;
 
-    const resaleCount = Math.max(cars.length - 1, 0);
-    const resaleTotal = 1450000 * resaleCount;
+    // 売却額の計算（売却対象の車両のみ）
+    const resalePricesMap = new Map(carResalePrices);
+    let resaleCount = 0;
+    let resaleTotal = 0;
+    
+    cars.forEach((car, index) => {
+      if (isResaleTarget(cars.length, index, plan)) {
+        const resalePrice = resalePricesMap.get(car.id) || 0;
+        resaleTotal += resalePrice;
+        resaleCount++;
+      }
+    });
 
     const totalBeforeResale = carPriceTotal + taxTotal + optionTotal + miscTotal;
     const totalPurchase = totalBeforeResale - resaleTotal;
 
+    const additionalMonthlyPricesMap = new Map(carAdditionalMonthlyPrices);
     const leaseBreakdown = cars.map((c, idx) => {
       const m = modelMap.get(c.modelId!);
-      const monthly = m?.monthly ?? 0;
-      const months = getLeaseMonths(cars.length, idx);
+      const baseMonthly = plan === 'j7' ? (m?.monthly7 ?? 0) : (m?.monthly9 ?? 0);
+      const additionalMonthly = additionalMonthlyPricesMap.get(c.id) || 0;
+      const monthly = baseMonthly + additionalMonthly;
+      const months = getLeaseMonths(cars.length, idx, plan);
       return { label: `${idx + 1}台目`, total: monthly * months };
     });
 
@@ -70,5 +95,5 @@ export function useLeaseCalc({ cars, modelMap, optionPrice, miscFee }: Args) {
     };
   };
 
-  return useMemo(() => ({ calculate }), [cars, modelMap, optionPrice, miscFee]);
+  return useMemo(() => ({ calculate }), [cars, modelMap, carOptionsArray, miscFee, plan, carResalePrices, carAdditionalMonthlyPrices, overrideOptionTotal]);
 }

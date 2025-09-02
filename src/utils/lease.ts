@@ -52,4 +52,22 @@ export const getTotalLeaseMonths = (plan: PlanKey): number => {
       return 84;
   }
 };
+
+// 車両が売却対象かどうかを判定
+export const isResaleTarget = (total: number, index: number, plan: PlanKey = "j7"): boolean => {
+  // 1台のみの場合は売却対象なし
+  if (total === 1) return false;
+  
+  // 2台の場合：1台目のみ売却対象
+  if (total === 2) {
+    return index === 0;
+  }
+  
+  // 3台の場合：1台目、2台目が売却対象
+  if (total === 3) {
+    return index < 2;
+  }
+  
+  return false;
+};
   
