@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { notFound, useRouter, useParams } from "next/navigation";
 import { RECOMMENDED } from "@/data/recommended";
-import { RecommendedCar, CarRow } from "@/types/cars";
+import { RecommendedCar, CarRow, CarOption } from "@/types/cars";
 import { PLAN_LABEL, PlanKey } from "@/types/plan";
-import { getLeaseMonths, getMaxCars, getTotalLeaseMonths, isResaleTarget } from "@/utils/lease";
+import { getLeaseMonths, getMaxCars, isResaleTarget } from "@/utils/lease";
 import CarCard from "@/components/CarCard";
 import PickerModal from "@/components/PickerModal";
 
@@ -19,7 +19,7 @@ export default function InputPage() {
   if (!["j7", "j9"].includes(plan)) notFound();
 
   const router = useRouter();
-  const { cars, optionPrice, miscFee, carOptionsArray, carResalePrices, carAdditionalMonthlyPrices, setCars, setResult, setPlan, addCarOption, removeCarOption, removeAllCarOptions, setCarResalePrice, removeCarResalePrice, setCarAdditionalMonthlyPrice, removeCarAdditionalMonthlyPrice } = useSimStore();
+  const { cars, miscFee, carOptionsArray, carResalePrices, carAdditionalMonthlyPrices, setCars, setResult, setPlan, addCarOption, removeCarOption, removeAllCarOptions, setCarResalePrice, removeCarResalePrice, setCarAdditionalMonthlyPrice, removeCarAdditionalMonthlyPrice } = useSimStore();
   
   // 配列からMapに変換
   const storeCarOptions = useMemo(() => new Map(carOptionsArray), [carOptionsArray]);
@@ -64,12 +64,7 @@ export default function InputPage() {
     return map;
   }, []);
 
-  // 各車両のオプション料金の合計を計算
-  const totalOptionPrice = Array.from(storeCarOptions.values()).reduce((sum: number, carOptions: any[]) => {
-    return sum + carOptions.reduce((carSum, carOption) => {
-      return carSum + (carOption?.price || 0);
-    }, 0);
-  }, 0);
+
 
   const [overrideOptionTotal, setOverrideOptionTotal] = useState<number | undefined>(undefined);
   const [shouldCalculate, setShouldCalculate] = useState<boolean>(false);
@@ -121,11 +116,7 @@ export default function InputPage() {
     removeCarOption(carId, optionId);
   };
 
-  const handleUpdateOption = (carId: number, optionId: string, name: string, price: number) => {
-    // 既存のオプションを削除して新しいオプションを追加
-    removeCarOption(carId, optionId);
-    addCarOption(carId, { id: optionId, name, price });
-  };
+
 
   const handleUpdateMonthlyPrice = (carId: number, additionalMonthlyPrice: number) => {
     setCarAdditionalMonthlyPrice(carId, additionalMonthlyPrice);
@@ -220,7 +211,7 @@ export default function InputPage() {
     let hasErrors = false;
     for (const [carId, validateFn] of resalePriceValidators.current) {
       const carIndex = cars.findIndex(c => c.id === carId);
-      if (carIndex >= 0 && isResaleTarget(cars.length, carIndex, plan)) {
+      if (carIndex >= 0 && isResaleTarget(cars.length, carIndex)) {
         if (!validateFn()) {
           hasErrors = true;
         }
@@ -273,7 +264,7 @@ export default function InputPage() {
                 onRemove={() => handleRemoveCar(car.id)}
                 onAddOption={(name, price) => handleAddOption(car.id, name, price)}
                 onRemoveOption={(optionId) => handleRemoveOption(car.id, optionId)}
-                onUpdateOption={(optionId, name, price) => handleUpdateOption(car.id, optionId, name, price)}
+
                 onUpdateMonthlyPrice={handleUpdateMonthlyPrice}
                 onUpdateResalePrice={handleUpdateResalePrice}
                 onValidateResalePrice={handleValidateResalePrice}

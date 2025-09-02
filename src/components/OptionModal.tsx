@@ -18,28 +18,28 @@ export default function OptionModal({ open, onClose, selectedOptions, onSelect }
 
   const handleQuantityChange = (optionId: string, quantity: number) => {
     if (quantity <= 0) {
-      setTempOptions(tempOptions.filter(opt => opt.optionId !== optionId));
+      setTempOptions(tempOptions.filter(opt => opt.id !== optionId));
     } else {
-      const existingIndex = tempOptions.findIndex(opt => opt.optionId === optionId);
+      const existingIndex = tempOptions.findIndex(opt => opt.id === optionId);
       if (existingIndex >= 0) {
         const newOptions = [...tempOptions];
-        newOptions[existingIndex] = { optionId, quantity };
+        newOptions[existingIndex] = { id: optionId, name: '', price: 0 };
         setTempOptions(newOptions);
       } else {
-        setTempOptions([...tempOptions, { optionId, quantity }]);
+        setTempOptions([...tempOptions, { id: optionId, name: '', price: 0 }]);
       }
     }
   };
 
   const getQuantity = (optionId: string) => {
-    const option = tempOptions.find(opt => opt.optionId === optionId);
-    return option ? option.quantity : 0;
+    const option = tempOptions.find(opt => opt.id === optionId);
+    return option ? 1 : 0;
   };
 
   const getTotalPrice = () => {
     return tempOptions.reduce((total, carOption) => {
-      const option = OPTIONS.find(opt => opt.id === carOption.optionId);
-      return total + (option ? option.price * carOption.quantity : 0);
+      const option = OPTIONS.find(opt => opt.id === carOption.id);
+      return total + (option ? option.price : 0);
     }, 0);
   };
 

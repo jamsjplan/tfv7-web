@@ -24,8 +24,9 @@ export interface Option {
 }
 
 export interface CarOption {
-  optionId: string;
-  quantity: number;
+  id: string;
+  name: string;
+  price: number;
 }
 
 export interface CalcResult {

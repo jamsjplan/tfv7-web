@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { CalcResult, CarRow, RecommendedCar } from "@/types/cars";
+import { CalcResult, CarRow, RecommendedCar, CarOption } from "@/types/cars";
 import { getLeaseMonths, isResaleTarget } from "@/utils/lease";
 import { PlanKey } from "@/types/plan";
 
 type Args = {
   cars: CarRow[];
   modelMap: Map<string, RecommendedCar>;
-  carOptionsArray: [number, any[]][];
+  carOptionsArray: [number, CarOption[]][];
   miscFee: number;
   plan: PlanKey;
   carResalePrices: [number, number][];
@@ -45,7 +45,7 @@ export function useLeaseCalc({ cars, modelMap, carOptionsArray, miscFee, plan, c
     // オプション合計を計算
     const optionTotal = overrideOptionTotal !== undefined 
       ? overrideOptionTotal 
-      : Array.from(new Map(carOptionsArray).values()).reduce((sum: number, carOptions: any[]) => {
+      : Array.from(new Map(carOptionsArray).values()).reduce((sum: number, carOptions: CarOption[]) => {
           return sum + carOptions.reduce((carSum, carOption) => {
             return carSum + (carOption?.price || 0);
           }, 0);
@@ -58,7 +58,7 @@ export function useLeaseCalc({ cars, modelMap, carOptionsArray, miscFee, plan, c
     let resaleTotal = 0;
     
     cars.forEach((car, index) => {
-      if (isResaleTarget(cars.length, index, plan)) {
+      if (isResaleTarget(cars.length, index)) {
         const resalePrice = resalePricesMap.get(car.id) || 0;
         resaleTotal += resalePrice;
         resaleCount++;
@@ -95,5 +95,5 @@ export function useLeaseCalc({ cars, modelMap, carOptionsArray, miscFee, plan, c
     };
   };
 
-  return useMemo(() => ({ calculate }), [cars, modelMap, carOptionsArray, miscFee, plan, carResalePrices, carAdditionalMonthlyPrices, overrideOptionTotal]);
+  return useMemo(() => ({ calculate }), [cars, modelMap, carOptionsArray, miscFee, plan, carResalePrices, carAdditionalMonthlyPrices, overrideOptionTotal, calculate]);
 }

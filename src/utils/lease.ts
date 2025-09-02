@@ -54,7 +54,7 @@ export const getTotalLeaseMonths = (plan: PlanKey): number => {
 };
 
 // 車両が売却対象かどうかを判定
-export const isResaleTarget = (total: number, index: number, plan: PlanKey = "j7"): boolean => {
+export const isResaleTarget = (total: number, index: number): boolean => {
   // 1台のみの場合は売却対象なし
   if (total === 1) return false;
   

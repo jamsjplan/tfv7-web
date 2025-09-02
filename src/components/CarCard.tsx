@@ -24,7 +24,7 @@ type Props = {
   onRemove: () => void;
   onAddOption: (name: string, price: number) => void;
   onRemoveOption: (optionId: string) => void;
-  onUpdateOption: (optionId: string, name: string, price: number) => void;
+
   onUpdateMonthlyPrice: (carId: number, additionalMonthlyPrice: number) => void;
   onUpdateResalePrice: (carId: number, resalePrice: number) => void;
   onValidateResalePrice: (carId: number, validateFn: () => boolean) => void;
@@ -33,7 +33,7 @@ type Props = {
   carId: number;
 };
 
-export default function CarCard({ selected, leaseMonths, optionPrice, carOptions, plan, totalCars, carIndex, onPick, onRemove, onAddOption, onRemoveOption, onUpdateOption, onUpdateMonthlyPrice, onUpdateResalePrice, onValidateResalePrice, onCopyFirstCarOptions, onGetInputFields, carId }: Props) {
+export default function CarCard({ selected, leaseMonths, optionPrice, carOptions, plan, totalCars, carIndex, onPick, onRemove, onAddOption, onRemoveOption, onUpdateMonthlyPrice, onUpdateResalePrice, onValidateResalePrice, onCopyFirstCarOptions, onGetInputFields, carId }: Props) {
   const { carResalePrices, carAdditionalMonthlyPrices } = useSimStore();
   const [inputFields, setInputFields] = useState<Array<{ id: string; name: string; price: string }>>([]);
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: boolean }>({});
@@ -43,7 +43,7 @@ export default function CarCard({ selected, leaseMonths, optionPrice, carOptions
   const resalePriceInputRef = useRef<HTMLInputElement>(null);
 
   // 売却対象かどうかを判定
-  const isResale = isResaleTarget(totalCars, carIndex, plan);
+  const isResale = isResaleTarget(totalCars, carIndex);
 
   // オプションフィールドと売却額をZustandストアから復元
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function CarCard({ selected, leaseMonths, optionPrice, carOptions
   // 親コンポーネントに検証関数を登録
   React.useEffect(() => {
     onValidateResalePrice(carId, validateResalePrice);
-  }, [carId, onValidateResalePrice, resalePrice]);
+  }, [carId, onValidateResalePrice, resalePrice, validateResalePrice]);
 
   // 入力フィールドの取得関数を親に登録
   React.useEffect(() => {
